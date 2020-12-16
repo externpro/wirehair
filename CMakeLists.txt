@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(wirehair)
 
 set(CMAKE_CXX_STANDARD 11)
+include(flags OPTIONAL)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
@@ -64,20 +65,42 @@ set(GEN_TABLES
 
 if(MSVC)
 else()
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(flags -Wall -Wextra -mssse3)
+    if(MARCH_NATIVE)
+        list(APPEND flags -march=native)
+    endif()
+    include(CheckCXXCompilerFlag)
+    foreach(flag ${flags})
+        string(REPLACE "=" "_" _flag ${flag})
+        check_cxx_compiler_flag("${flag}" has_wh${_flag})
+        if(has_wh${_flag})
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+        endif()
+    endforeach()
+    if(XP_BUILD_VERBOSE)
+        message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+        message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+        message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+    endif()
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        add_definitions(-DLINUX_ARM=1)
+    endif()
 endif()
 
-if(MARCH_NATIVE)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -march=native")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+if(DEFINED WIREHAIR_VER)
+  set(_ver _${WIREHAIR_VER})
+endif()
+if(DONT_INSTALL_PYTHON)
+  set(optionalInstall EXCLUDE_FROM_ALL)
 endif()
 
 add_library(wirehair ${LIB_SOURCE_FILES})
 set_target_properties(wirehair PROPERTIES VERSION 2)
 set_target_properties(wirehair PROPERTIES SOVERSION 2)
-target_include_directories(wirehair PUBLIC ${PROJECT_SOURCE_DIR}/include)
+set_target_properties(wirehair PROPERTIES OUTPUT_NAME wirehair${_ver})
+target_include_directories(wirehair PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
 
 add_executable(unit_test ${UNIT_TEST_SOURCE_FILES})
 target_link_libraries(unit_test wirehair)
@@ -98,9 +121,14 @@ add_executable(gen_tables ${GEN_TABLES})
 
 include(GNUInstallDirs)
 
-install(TARGETS wirehair
+set(targetsFile ${PROJECT_NAME}${_ver}-targets)
+install(TARGETS wirehair EXPORT ${targetsFile}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX})
+if(DEFINED XP_NAMESPACE)
+  set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
+endif()
+install(EXPORT ${targetsFile} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake ${nameSpace})
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX} ${optionalInstall})
