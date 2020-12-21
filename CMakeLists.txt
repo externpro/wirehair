@@ -15,8 +15,10 @@ option(MARCH_NATIVE "Use -march=native option" ON)
 set(LIB_SOURCE_FILES
         wirehair.cpp
         include/wirehair/wirehair.h
+        cm256.cpp
+        include/wirehair/cm256.h
         gf256.cpp
-        gf256.h
+        include/wirehair/gf256.h
         WirehairCodec.cpp
         WirehairCodec.h
         WirehairTools.cpp
@@ -59,8 +61,6 @@ set(GEN_TABLES
         tables/TableGenerator.cpp
         tables/HeavyRowGenerator.cpp
         tables/HeavyRowGenerator.h
-        gf256.cpp
-        gf256.h
         )
 
 if(MSVC)
@@ -118,6 +118,7 @@ add_executable(gen_dcounts ${GEN_DCOUNTS})
 target_link_libraries(gen_dcounts wirehair)
 
 add_executable(gen_tables ${GEN_TABLES})
+target_link_libraries(gen_tables wirehair)
 
 include(GNUInstallDirs)
 
