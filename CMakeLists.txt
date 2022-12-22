@@ -87,9 +87,6 @@ else()
     endif()
 endif()
 
-if(DEFINED WIREHAIR_VER)
-  set(_ver _${WIREHAIR_VER})
-endif()
 if(DONT_INSTALL_PYTHON)
   set(optionalInstall EXCLUDE_FROM_ALL)
 endif()
@@ -97,7 +94,6 @@ endif()
 add_library(wirehair ${LIB_SOURCE_FILES})
 set_target_properties(wirehair PROPERTIES VERSION 2)
 set_target_properties(wirehair PROPERTIES SOVERSION 2)
-set_target_properties(wirehair PROPERTIES OUTPUT_NAME wirehair${_ver})
 target_include_directories(wirehair PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
@@ -122,7 +118,7 @@ target_link_libraries(gen_tables wirehair)
 
 include(GNUInstallDirs)
 
-set(targetsFile ${PROJECT_NAME}${_ver}-targets)
+set(targetsFile ${PROJECT_NAME}-targets)
 install(TARGETS wirehair EXPORT ${targetsFile}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -130,6 +126,9 @@ install(TARGETS wirehair EXPORT ${targetsFile}
 if(DEFINED XP_NAMESPACE)
   set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
 endif()
-install(EXPORT ${targetsFile} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake ${nameSpace})
+if(NOT DEFINED XP_INSTALL_CMAKEDIR)
+  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
+endif()
+install(EXPORT ${targetsFile} DESTINATION ${XP_INSTALL_CMAKEDIR} ${nameSpace})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX} ${optionalInstall})
