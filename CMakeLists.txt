@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(wirehair)
 
 set(CMAKE_CXX_STANDARD 11)
-include(flags OPTIONAL)
+include(xpflags)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
