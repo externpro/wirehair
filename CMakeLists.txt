@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(wirehair)
 
+
 set(CMAKE_CXX_STANDARD 11)
 include(xpflags)
 
@@ -11,6 +12,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 option(MARCH_NATIVE "Use -march=native option" ON)
+option(BUILD_TESTS "build testsuite" ON)
 
 set(LIB_SOURCE_FILES
         wirehair.cpp
@@ -79,8 +81,9 @@ else()
     endforeach()
     if(XP_BUILD_VERBOSE)
         message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-        message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-        message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+        message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}") # "-g -O0"
+        message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}") # "-O3"
+        message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}") # "-g -O3"
     endif()
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
         add_definitions(-DLINUX_ARM=1)
@@ -98,23 +101,25 @@ target_include_directories(wirehair PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DI
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
-add_executable(unit_test ${UNIT_TEST_SOURCE_FILES})
-target_link_libraries(unit_test wirehair)
+if (BUILD_TESTS)
+    add_executable(unit_test ${UNIT_TEST_SOURCE_FILES})
+    target_link_libraries(unit_test wirehair)
 
-add_executable(gen_small_dseeds ${GEN_SMALL_DSEEDS})
-target_link_libraries(gen_small_dseeds wirehair)
+    add_executable(gen_small_dseeds ${GEN_SMALL_DSEEDS})
+    target_link_libraries(gen_small_dseeds wirehair)
 
-add_executable(gen_peel_seeds ${GEN_PEEL_SEEDS})
-target_link_libraries(gen_peel_seeds wirehair)
+    add_executable(gen_peel_seeds ${GEN_PEEL_SEEDS})
+    target_link_libraries(gen_peel_seeds wirehair)
 
-add_executable(gen_most_dseeds ${GEN_MOST_DSEEDS})
-target_link_libraries(gen_most_dseeds wirehair)
+    add_executable(gen_most_dseeds ${GEN_MOST_DSEEDS})
+    target_link_libraries(gen_most_dseeds wirehair)
 
-add_executable(gen_dcounts ${GEN_DCOUNTS})
-target_link_libraries(gen_dcounts wirehair)
+    add_executable(gen_dcounts ${GEN_DCOUNTS})
+    target_link_libraries(gen_dcounts wirehair)
 
-add_executable(gen_tables ${GEN_TABLES})
-target_link_libraries(gen_tables wirehair)
+    add_executable(gen_tables ${GEN_TABLES})
+    target_link_libraries(gen_tables wirehair)
+endif()
 
 include(GNUInstallDirs)
 
