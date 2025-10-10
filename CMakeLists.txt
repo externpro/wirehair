@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5...3.31)
+set(CMAKE_PROJECT_TOP_LEVEL_INCLUDES .devcontainer/cmake/xproinc.cmake)
 project(wirehair)
+
 
 set(CMAKE_CXX_STANDARD 11)
 include(xpflags)
@@ -11,6 +13,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 option(MARCH_NATIVE "Use -march=native option" ON)
+option(BUILD_TESTS "build testsuite" ON)
 
 set(LIB_SOURCE_FILES
         wirehair.cpp
@@ -79,16 +82,13 @@ else()
     endforeach()
     if(XP_BUILD_VERBOSE)
         message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-        message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-        message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+        message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}") # "-g -O0"
+        message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}") # "-O3"
+        message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}") # "-g -O3"
     endif()
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
         add_definitions(-DLINUX_ARM=1)
     endif()
-endif()
-
-if(DONT_INSTALL_PYTHON)
-  set(optionalInstall EXCLUDE_FROM_ALL)
 endif()
 
 add_library(wirehair ${LIB_SOURCE_FILES})
@@ -98,37 +98,44 @@ target_include_directories(wirehair PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DI
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
-add_executable(unit_test ${UNIT_TEST_SOURCE_FILES})
-target_link_libraries(unit_test wirehair)
+if (BUILD_TESTS)
+    add_executable(unit_test ${UNIT_TEST_SOURCE_FILES})
+    target_link_libraries(unit_test wirehair)
 
-add_executable(gen_small_dseeds ${GEN_SMALL_DSEEDS})
-target_link_libraries(gen_small_dseeds wirehair)
+    add_executable(gen_small_dseeds ${GEN_SMALL_DSEEDS})
+    target_link_libraries(gen_small_dseeds wirehair)
 
-add_executable(gen_peel_seeds ${GEN_PEEL_SEEDS})
-target_link_libraries(gen_peel_seeds wirehair)
+    add_executable(gen_peel_seeds ${GEN_PEEL_SEEDS})
+    target_link_libraries(gen_peel_seeds wirehair)
 
-add_executable(gen_most_dseeds ${GEN_MOST_DSEEDS})
-target_link_libraries(gen_most_dseeds wirehair)
+    add_executable(gen_most_dseeds ${GEN_MOST_DSEEDS})
+    target_link_libraries(gen_most_dseeds wirehair)
 
-add_executable(gen_dcounts ${GEN_DCOUNTS})
-target_link_libraries(gen_dcounts wirehair)
+    add_executable(gen_dcounts ${GEN_DCOUNTS})
+    target_link_libraries(gen_dcounts wirehair)
 
-add_executable(gen_tables ${GEN_TABLES})
-target_link_libraries(gen_tables wirehair)
+    add_executable(gen_tables ${GEN_TABLES})
+    target_link_libraries(gen_tables wirehair)
+endif()
 
 include(GNUInstallDirs)
 
-set(targetsFile ${PROJECT_NAME}-targets)
-install(TARGETS wirehair EXPORT ${targetsFile}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+set(lib wirehair)
 if(DEFINED XP_NAMESPACE)
   set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
+  string(PREPEND lib "${XP_NAMESPACE}::")
 endif()
 if(NOT DEFINED XP_INSTALL_CMAKEDIR)
   set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
 endif()
+set(targetsFile ${PROJECT_NAME}-targets)
+xpPackageDevel(TARGETS_FILE ${targetsFile} LIBRARIES ${lib})
+install(TARGETS wirehair EXPORT ${targetsFile}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT ${targetsFile} DESTINATION ${XP_INSTALL_CMAKEDIR} ${nameSpace})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX} ${optionalInstall})
+if(NOT DONT_INSTALL_PYTHON)
+    install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX})
+endif()

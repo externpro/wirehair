@@ -1,0 +1,21 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "config-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/_bld-${presetName}",
+      "cacheVariables": {
+        "XP_NAMESPACE": "xpro",
+        "DONT_INSTALL_PYTHON": true,
+        "MARCH_NATIVE": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-base",
+      "hidden": true
+    }
+  ]
+}
