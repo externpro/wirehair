@@ -61,3 +61,8 @@ Temporary Items
 
 #Build cmake dir
 build
+
+# externpro
+.env
+_bld*/
+docker-compose.override.yml
