@@ -4,7 +4,6 @@ project(wirehair)
 
 
 set(CMAKE_CXX_STANDARD 11)
-include(xpflags)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
